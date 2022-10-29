@@ -11,7 +11,7 @@ mongoose.connect(mongoDB);
 app.use(express.json());
 
 app.use('/users', usersRouter);
-//app.use('/posts');
+// app.use('/posts');
 
 app.listen(port, () => {
     console.log(`server started at http://localhost:${port}`);
