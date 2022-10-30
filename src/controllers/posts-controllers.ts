@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { validate } from 'class-validator';
-import { Post, PostModel } from '../models/post-model';
+import { PostModel } from '../models/post-model';
+import { Post } from '../dto/post.dto';
 
 export async function createPost(req: Request, res: Response, next: NextFunction) {
     const validatePost = new Post();
