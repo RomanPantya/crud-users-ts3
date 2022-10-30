@@ -19,3 +19,24 @@ export async function createPost(req: Request, res: Response, next: NextFunction
     const created = await post.save();
     return res.json(created);
 }
+
+export async function getAllPosts(req: Request, res: Response) {
+    const allPosts = await PostModel.find();
+    res.json(allPosts);
+}
+
+export async function getOne(req: Request, res: Response) {
+    const post = await PostModel.findById(req.params.id);
+    res.json(post);
+}
+
+export async function removePost(req: Request, res: Response) {
+    await PostModel.findByIdAndRemove(req.params.id);
+    res.json('ok');
+}
+
+export async function updatePost(req: Request, res: Response) {
+    const data = req.body;
+    const updateData = await PostModel.findByIdAndUpdate(req.params.id, data);
+    res.json(updateData);
+}
