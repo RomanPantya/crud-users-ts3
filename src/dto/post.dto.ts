@@ -3,7 +3,7 @@ import {
 } from 'class-validator';
 import { ObjectId } from 'mongoose';
 
-export class Post {
+export class PostDto {
   @IsString()
   @IsNotEmpty()
   title!: String;

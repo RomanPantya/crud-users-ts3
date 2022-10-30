@@ -1,10 +1,10 @@
 import { Request, Response, NextFunction } from 'express';
 import { validate } from 'class-validator';
 import { PostModel } from '../models/post-model';
-import { Post } from '../dto/post.dto';
+import { PostDto } from '../dto/post.dto';
 
 export async function createPost(req: Request, res: Response, next: NextFunction) {
-    const validatePost = new Post();
+    const validatePost = new PostDto();
 
     validatePost.title = req.body.title;
     validatePost.summary = req.body.summary;

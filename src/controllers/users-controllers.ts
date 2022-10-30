@@ -1,9 +1,9 @@
 import { validate } from 'class-validator';
 import { Request, Response, NextFunction } from 'express';
-import { User, UserModel } from '../models/user-model';
+import { UserDto, UserModel } from '../models/user-model';
 
 export async function createUser(req: Request, res: Response, next: NextFunction) {
-    const validateUser = new User();
+    const validateUser = new UserDto();
 
     validateUser.name = req.body.name;
     validateUser.email = req.body.email;

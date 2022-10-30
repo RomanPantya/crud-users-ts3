@@ -1,7 +1,7 @@
 import mongoose, { Schema } from 'mongoose';
 import { IsString, IsNotEmpty, IsEmail } from 'class-validator';
 
-export class User {
+export class UserDto {
   @IsString()
   @IsNotEmpty()
   name!: String;
@@ -14,7 +14,7 @@ export class User {
   password!: String;
 }
 
-const UserSchema = new Schema<User>({
+const UserSchema = new Schema<UserDto>({
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
