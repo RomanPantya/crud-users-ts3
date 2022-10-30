@@ -11,7 +11,7 @@ export class Post {
 }
 
 const PostSchema = new Schema<Post>({
-    title: { type: String, required: true },
+    title: { type: String, required: true, unique: true },
     summary: { type: String, required: true },
 });
 

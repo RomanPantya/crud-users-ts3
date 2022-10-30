@@ -37,6 +37,7 @@ export async function removePost(req: Request, res: Response) {
 
 export async function updatePost(req: Request, res: Response) {
     const data = req.body;
-    const updateData = await PostModel.findByIdAndUpdate(req.params.id, data);
-    res.json(updateData);
+    const postId = req.params.id;
+    await PostModel.findByIdAndUpdate(postId, data);
+    res.json(await PostModel.findById(postId));
 }
