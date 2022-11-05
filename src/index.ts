@@ -23,7 +23,7 @@ async function main() {
     app.use('/auth', authRouter);
 
     app.listen(port, () => {
-        console.log(`server started at http://localhost:${port}`);
+        console.info(`server started at http://localhost:${port}`);
     });
 }
 
