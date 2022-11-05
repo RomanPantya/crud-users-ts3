@@ -64,10 +64,32 @@ export async function getOne(req: Request, res: Response, next: NextFunction) {
     return post ? res.json(post) : next(new Error('Do not have posts with this ID'));
 }
 
-export async function removePost(req: Request, res: Response) {
-    // const access = req.headers.authorization;
-    await PostModel.findByIdAndRemove(req.params.id);
-    res.json('ok');
+export async function removePost(req: Request, res: Response, next: NextFunction) {
+    const access = req.headers.authorization;
+    if (!access) {
+        return next(new Error('status 403: forbidden'));
+    }
+
+    const { id: userId } = verify(access.split(' ')[1], process.env.JWT_SECRET!) as {id: string};
+    const postId = new PostId();
+    postId.id = req.params.id;
+
+    const error = validate(postId);
+    if ((await error).length > 0) {
+        return next(error);
+    }
+
+    const post = await PostModel.findById(postId.id);
+    if (!post) {
+        return next(new Error('Do not have posts with this ID'));
+    }
+
+    if (post.userId.toString() !== userId) {
+        return next(new Error('You do not have enough authority'));
+    }
+
+    post.remove();
+    return res.json(`post with Id: ${postId.id} was removed`);
 }
 
 export async function updatePost(req: Request, res: Response, next: NextFunction) {
