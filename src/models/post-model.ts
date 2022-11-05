@@ -1,10 +1,12 @@
-import mongoose, { Schema, Types } from 'mongoose';
+import mongoose, { Schema } from 'mongoose';
 import { PostDto } from '../dto/post.dto';
 
 const PostSchema = new Schema<PostDto>({
-    title: { type: String, required: true, unique: true },
+    title: { type: String, required: true },
     summary: { type: String, required: true },
-    userId: { type: Types.ObjectId, ref: 'User' },
+    userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
 });
+
+PostSchema.index({ title: 1 }, { unique: true });
 
 export const PostModel = mongoose.model('Post', PostSchema);

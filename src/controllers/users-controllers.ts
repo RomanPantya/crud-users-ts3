@@ -1,6 +1,7 @@
 import { validate } from 'class-validator';
 import { Request, Response, NextFunction } from 'express';
-import { UserDto, UserModel } from '../models/user-model';
+import { UserModel } from '../models/user-model';
+import { UserDto } from '../dto/user.dto';
 
 export async function createUser(req: Request, res: Response, next: NextFunction) {
     const validateUser = new UserDto();

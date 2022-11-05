@@ -1,7 +1,7 @@
 import {
-    IsMongoId, IsNotEmpty, IsString, Length,
+    IsNotEmpty, IsString, Length,
 } from 'class-validator';
-import { ObjectId } from 'mongoose';
+import { Types } from 'mongoose';
 
 export class PostDto {
   @IsString()
@@ -11,6 +11,5 @@ export class PostDto {
   @Length(10)
   summary!: String;
 
-  @IsMongoId()
-  userId!: ObjectId;
+  userId!: Types.ObjectId;
 }
