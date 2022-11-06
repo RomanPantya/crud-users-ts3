@@ -90,8 +90,14 @@ export async function updatePost(req: Request, res: Response, next: NextFunction
     if (!access) {
         return next(new Error('status 403: forbidden'));
     }
+    let userId;
 
-    const { id: userId } = verify(access.split(' ')[1], process.env.JWT_SECRET!) as {id: string};
+    try {
+        const { id } = verify(access.split(' ')[1], process.env.JWT_SECRET!) as {id: string};
+        userId = id;
+    } catch (error) {
+        return next(error);
+    }
 
     const postId = req.params.id;
     validateId(postId, next);
