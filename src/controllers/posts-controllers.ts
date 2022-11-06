@@ -1,4 +1,5 @@
 import { validate } from 'class-validator';
+import { plainToInstance } from 'class-transformer';
 import {
     NextFunction, Request, Response,
 } from 'express';
@@ -68,7 +69,6 @@ export async function removePost(req: Request, res: Response, next: NextFunction
 
     const { id: userId } = verify(access.split(' ')[1], process.env.JWT_SECRET!) as {id: string};
     const postId = req.params.id;
-
     validateId(postId, next);
 
     const post = await PostModel.findById(postId);
@@ -102,19 +102,8 @@ export async function updatePost(req: Request, res: Response, next: NextFunction
     const postId = req.params.id;
     validateId(postId, next);
 
-    const validatePost = new UpdatePostDto();
+    const validatePost = plainToInstance(UpdatePostDto, req.body);
 
-    const { title, summary } = req.body;
-
-    if (title) {
-        validatePost.title = req.body.title;
-    }
-    if (summary) {
-        validatePost.summary = req.body.summary;
-    }
-    if (!title && !summary) {
-        return next(new Error('Do not have data to update!'));
-    }
     const error = await validate(validatePost);
 
     if (error.length > 0) {
@@ -129,5 +118,8 @@ export async function updatePost(req: Request, res: Response, next: NextFunction
     if (post.userId.toString() !== userId) {
         return next(new Error('You do not have enough authority'));
     }
-    return res.json(await post.updateOne(validatePost));
+
+    return res.json(await PostModel.findOneAndUpdate({ _id: postId }, validatePost, {
+        new: true,
+    }));
 }
