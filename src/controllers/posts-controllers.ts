@@ -4,9 +4,9 @@ import {
 } from 'express';
 import { verify } from 'jsonwebtoken';
 import { CreatePostDto } from '../dto/create-post.dto';
-import { PostId } from '../dto/postId.dto';
 import { UpdatePostDto } from '../dto/update-post.dto';
 import { PostModel } from '../models/post-model';
+import { validateId } from '../utils/validate-id.util';
 
 export async function createPost(req: Request, res: Response, next: NextFunction) {
     const access = req.headers.authorization;
@@ -52,15 +52,11 @@ export async function getOne(req: Request, res: Response, next: NextFunction) {
         return next(new Error('status 403: forbidden'));
     }
     verify(access.split(' ')[1], process.env.JWT_SECRET!);
-    const postId = new PostId();
-    postId.id = req.params.id;
+    const postId = req.params.id;
 
-    const error = await validate(postId);
-    if (error.length > 0) {
-        return next(error);
-    }
+    validateId(postId, next);
 
-    const post = await PostModel.findById(postId.id);
+    const post = await PostModel.findById(postId);
     return post ? res.json(post) : next(new Error('Do not have posts with this ID'));
 }
 
@@ -71,15 +67,11 @@ export async function removePost(req: Request, res: Response, next: NextFunction
     }
 
     const { id: userId } = verify(access.split(' ')[1], process.env.JWT_SECRET!) as {id: string};
-    const postId = new PostId();
-    postId.id = req.params.id;
+    const postId = req.params.id;
 
-    const error = validate(postId);
-    if ((await error).length > 0) {
-        return next(error);
-    }
+    validateId(postId, next);
 
-    const post = await PostModel.findById(postId.id);
+    const post = await PostModel.findById(postId);
     if (!post) {
         return next(new Error('Do not have posts with this ID'));
     }
@@ -89,21 +81,47 @@ export async function removePost(req: Request, res: Response, next: NextFunction
     }
 
     post.remove();
-    return res.json(`post with Id: ${postId.id} was removed`);
+    return res.json(`post with Id: ${postId} was removed`);
 }
 
 export async function updatePost(req: Request, res: Response, next: NextFunction) {
+    const access = req.headers.authorization;
+
+    if (!access) {
+        return next(new Error('status 403: forbidden'));
+    }
+
+    const { id: userId } = verify(access.split(' ')[1], process.env.JWT_SECRET!) as {id: string};
+
+    const postId = req.params.id;
+    validateId(postId, next);
+
     const validatePost = new UpdatePostDto();
 
-    validatePost.title = req.body.title;
-    validatePost.summary = req.body.summary;
+    const { title, summary } = req.body;
 
+    if (title) {
+        validatePost.title = req.body.title;
+    }
+    if (summary) {
+        validatePost.summary = req.body.summary;
+    }
+    if (!title && !summary) {
+        return next(new Error('Do not have data to update!'));
+    }
     const error = await validate(validatePost);
 
     if (error.length > 0) {
         return next(new Error(error.join(' | ')));
     }
 
-    const postId = req.params.id;
-    return res.json(await PostModel.findByIdAndUpdate(postId, validatePost, { new: true }));
+    const post = await PostModel.findById(postId);
+
+    if (!post) {
+        return next(new Error('Do not have posts with this ID'));
+    }
+    if (post.userId.toString() !== userId) {
+        return next(new Error('You do not have enough authority'));
+    }
+    return res.json(await post.updateOne(validatePost));
 }
