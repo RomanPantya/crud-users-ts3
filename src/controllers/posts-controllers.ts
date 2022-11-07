@@ -54,7 +54,11 @@ export async function getOne(req: Request, res: Response, next: NextFunction) {
     if (!access) {
         return next(new Error('you must be authorizationed!'));
     }
-    verify(access.split(' ')[1], process.env.JWT_SECRET!);
+    try {
+        verify(access.split(' ')[1], process.env.JWT_SECRET!);
+    } catch {
+        return next(new Error('You have problems with your verification'));
+    }
 
     const postId = req.params.id;
     if (isMongoId(postId) === false) {
@@ -68,19 +72,15 @@ export async function getOne(req: Request, res: Response, next: NextFunction) {
 export async function removePost(req: Request, res: Response, next: NextFunction) {
     const access = req.headers.authorization;
     if (!access) {
-        return next(new Error('status 403: forbidden'));
+        return next(new Error('you must be authorizationed!'));
     }
-    let userId;
 
-    try {
-        const { id } = verify(access.split(' ')[1], process.env.JWT_SECRET!) as {id: string};
-        userId = id;
-    } catch (error) {
-        return next(error);
-    }
+    const { id: userId } = verify(access.split(' ')[1], process.env.JWT_SECRET!) as {id: string};
 
     const postId = req.params.id;
-    isMongoId(postId);
+    if (isMongoId(postId) === false) {
+        return next(new Error('Invalid Id'));
+    }
 
     const post = await PostModel.findById(postId);
     if (!post) {
