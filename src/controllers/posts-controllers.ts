@@ -1,4 +1,4 @@
-import { validate } from 'class-validator';
+import { validate, isMongoId } from 'class-validator';
 import { plainToInstance } from 'class-transformer';
 import {
     NextFunction, Request, Response,
@@ -7,7 +7,6 @@ import { verify } from 'jsonwebtoken';
 import { CreatePostDto } from '../dto/create-post.dto';
 import { UpdatePostDto } from '../dto/update-post.dto';
 import { PostModel } from '../models/post-model';
-import { validateId } from '../utils/validate-id.util';
 
 export async function createPost(req: Request, res: Response, next: NextFunction) {
     const access = req.headers.authorization;
@@ -40,22 +39,27 @@ export async function createPost(req: Request, res: Response, next: NextFunction
 export async function getAllPosts(req: Request, res: Response, next: NextFunction) {
     const access = req.headers.authorization;
     if (!access) {
-        return next(new Error('status 403: forbidden'));
+        return next(new Error('you must be authorizationed!'));
     }
-    verify(access.split(' ')[1], process.env.JWT_SECRET!);
-
+    try {
+        verify(access.split(' ')[1], process.env.JWT_SECRET!);
+    } catch (error) {
+        return next(new Error('You have problems with your verification'));
+    }
     return res.json(await PostModel.find());
 }
 
 export async function getOne(req: Request, res: Response, next: NextFunction) {
     const access = req.headers.authorization;
     if (!access) {
-        return next(new Error('status 403: forbidden'));
+        return next(new Error('you must be authorizationed!'));
     }
     verify(access.split(' ')[1], process.env.JWT_SECRET!);
-    const postId = req.params.id;
 
-    validateId(postId, next);
+    const postId = req.params.id;
+    if (isMongoId(postId) === false) {
+        return next(new Error('Invalid Id'));
+    }
 
     const post = await PostModel.findById(postId);
     return post ? res.json(post) : next(new Error('Do not have posts with this ID'));
@@ -66,10 +70,17 @@ export async function removePost(req: Request, res: Response, next: NextFunction
     if (!access) {
         return next(new Error('status 403: forbidden'));
     }
+    let userId;
 
-    const { id: userId } = verify(access.split(' ')[1], process.env.JWT_SECRET!) as {id: string};
+    try {
+        const { id } = verify(access.split(' ')[1], process.env.JWT_SECRET!) as {id: string};
+        userId = id;
+    } catch (error) {
+        return next(error);
+    }
+
     const postId = req.params.id;
-    validateId(postId, next);
+    isMongoId(postId);
 
     const post = await PostModel.findById(postId);
     if (!post) {
@@ -96,11 +107,11 @@ export async function updatePost(req: Request, res: Response, next: NextFunction
         const { id } = verify(access.split(' ')[1], process.env.JWT_SECRET!) as {id: string};
         userId = id;
     } catch (error) {
-        return next(error);
+        return next(new Error('You have problems with your verification'));
     }
 
     const postId = req.params.id;
-    validateId(postId, next);
+    isMongoId(postId);
 
     const validatePost = plainToInstance(UpdatePostDto, req.body);
 
