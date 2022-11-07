@@ -75,7 +75,13 @@ export async function removePost(req: Request, res: Response, next: NextFunction
         return next(new Error('you must be authorizationed!'));
     }
 
-    const { id: userId } = verify(access.split(' ')[1], process.env.JWT_SECRET!) as {id: string};
+    let userId;
+    try {
+        const { id } = verify(access.split(' ')[1], process.env.JWT_SECRET!) as {id: string};
+        userId = id;
+    } catch (error) {
+        return next(error);
+    }
 
     const postId = req.params.id;
     if (isMongoId(postId) === false) {
@@ -91,8 +97,7 @@ export async function removePost(req: Request, res: Response, next: NextFunction
         return next(new Error('You do not have enough authority'));
     }
 
-    post.remove();
-    return res.json(`post with Id: ${postId} was removed`);
+    return res.json(await PostModel.findByIdAndRemove(postId));
 }
 
 export async function updatePost(req: Request, res: Response, next: NextFunction) {
