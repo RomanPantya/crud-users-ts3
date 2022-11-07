@@ -1,4 +1,4 @@
-import { validate, isMongoId } from 'class-validator';
+import { validate, isMongoId, isNotEmptyObject } from 'class-validator';
 import { plainToInstance } from 'class-transformer';
 import {
     NextFunction, Request, Response,
@@ -11,14 +11,22 @@ import { PostModel } from '../models/post-model';
 export async function createPost(req: Request, res: Response, next: NextFunction) {
     const access = req.headers.authorization;
     if (!access) {
-        return next(new Error('status 403: forbidden'));
+        return next(new Error('you must be authorizationed!'));
     }
-    const { id } = verify(access.split(' ')[1], process.env.JWT_SECRET!) as { id: string };
+
+    let userId;
+    try {
+        const { id } = verify(access.split(' ')[1], process.env.JWT_SECRET!) as { id: string };
+        userId = id;
+    } catch (error) {
+        return next(error);
+    }
+
     const validatePost = new CreatePostDto();
 
     validatePost.title = req.body.title;
     validatePost.summary = req.body.summary;
-    validatePost.userId = id;
+    validatePost.userId = userId;
 
     const error = await validate(validatePost);
 
@@ -102,23 +110,29 @@ export async function removePost(req: Request, res: Response, next: NextFunction
 
 export async function updatePost(req: Request, res: Response, next: NextFunction) {
     const access = req.headers.authorization;
-
     if (!access) {
-        return next(new Error('status 403: forbidden'));
+        return next(new Error('you must be authorizationed!'));
     }
-    let userId;
 
+    let userId;
     try {
         const { id } = verify(access.split(' ')[1], process.env.JWT_SECRET!) as {id: string};
         userId = id;
     } catch (error) {
-        return next(new Error('You have problems with your verification'));
+        return next(error);
     }
 
     const postId = req.params.id;
-    isMongoId(postId);
+    if (isMongoId(postId) === false) {
+        return next(new Error('Invalid Id'));
+    }
 
-    const validatePost = plainToInstance(UpdatePostDto, req.body);
+    const data = req.body;
+    if (isNotEmptyObject(data) === false) {
+        return next(new Error('Do not have data to update!'));
+    }
+
+    const validatePost = plainToInstance(UpdatePostDto, data);
 
     const error = await validate(validatePost);
 
