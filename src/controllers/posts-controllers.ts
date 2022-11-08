@@ -89,12 +89,12 @@ export async function getPostsByTitle(req: Request, res: Response, next: NextFun
         return next(error);
     }
 
-    const { data } = req.query;
+    const { data } = req.query as { data: string };
     if (!data) {
         return next(new Error('no data in querrystring!'));
     }
 
-    return res.json(await PostModel.find({ title: /data/ }));
+    return res.json(await PostModel.find({ title: new RegExp(data) }));
 }
 
 export async function removePost(req: Request, res: Response, next: NextFunction) {
