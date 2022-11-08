@@ -23,7 +23,10 @@ export async function login(req:Request, res: Response, next: NextFunction) {
         return next(new Error('error 403: password is not valid!'));
     }
 
-    const access = sign({ id: user.id }, process.env.JWT_SECRET!, { expiresIn: '7h' });
+    const twoTokens = {
+        access: sign({ id: user.id }, process.env.JWT_SECRET!, { expiresIn: '2h' }),
+        refresh: sign({ id: user.id }, process.env.JWT_SECRET!, { expiresIn: '2d' }),
+    };
 
-    return res.json({ access });
+    return res.json({ twoTokens });
 }
