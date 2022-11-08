@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import {
-    createPost, getAllPosts, getOne, removePost, updatePost,
+    createPost, getAllPosts, getOne, getPostsByTitle, removePost, updatePost,
 } from '../controllers/posts-controllers';
 
 export const postsRouter = Router();
@@ -8,6 +8,8 @@ export const postsRouter = Router();
 postsRouter.post('/', createPost);
 
 postsRouter.get('/', getAllPosts);
+
+postsRouter.get('/title', getPostsByTitle);
 
 postsRouter.get('/:id', getOne);
 

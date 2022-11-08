@@ -64,8 +64,8 @@ export async function getOne(req: Request, res: Response, next: NextFunction) {
 
     try {
         verify(access.split(' ')[1], process.env.JWT_SECRET!);
-    } catch {
-        return next(new Error('You have problems with your verification'));
+    } catch (error) {
+        return next(error);
     }
 
     const postId = req.params.id;
@@ -75,6 +75,26 @@ export async function getOne(req: Request, res: Response, next: NextFunction) {
 
     const post = await PostModel.findById(postId);
     return post ? res.json(post) : next(new Error('Do not have posts with this ID'));
+}
+
+export async function getPostsByTitle(req: Request, res: Response, next: NextFunction) {
+    const access = req.headers.authorization;
+    if (!access) {
+        return next(new Error('you must be authorizationed!'));
+    }
+
+    try {
+        verify(access.split(' ')[1], process.env.JWT_SECRET!);
+    } catch (error) {
+        return next(error);
+    }
+
+    const { data } = req.query;
+    if (!data) {
+        return next(new Error('no data in querrystring!'));
+    }
+
+    return res.json(await PostModel.find({ title: /data/ }));
 }
 
 export async function removePost(req: Request, res: Response, next: NextFunction) {
