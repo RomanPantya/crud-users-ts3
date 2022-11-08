@@ -14,22 +14,19 @@ export async function createPost(req: Request, res: Response, next: NextFunction
         return next(new Error('you must be authorizationed!'));
     }
 
-    let userId;
+    let postUserId;
     try {
         const { id } = verify(access.split(' ')[1], process.env.JWT_SECRET!) as { id: string };
-        userId = id;
+        postUserId = id;
     } catch (error) {
         return next(error);
     }
 
-    const validatePost = new CreatePostDto();
+    const data = { ...req.body, userId: postUserId };
 
-    validatePost.title = req.body.title;
-    validatePost.summary = req.body.summary;
-    validatePost.userId = userId;
+    const validatePost = plainToInstance(CreatePostDto, data);
 
     const error = await validate(validatePost);
-
     if (error.length > 0) {
         return next(new Error(error.join(' | ')));
     }
@@ -49,11 +46,13 @@ export async function getAllPosts(req: Request, res: Response, next: NextFunctio
     if (!access) {
         return next(new Error('you must be authorizationed!'));
     }
+
     try {
         verify(access.split(' ')[1], process.env.JWT_SECRET!);
     } catch (error) {
         return next(new Error('You have problems with your verification'));
     }
+
     return res.json(await PostModel.find());
 }
 
@@ -62,6 +61,7 @@ export async function getOne(req: Request, res: Response, next: NextFunction) {
     if (!access) {
         return next(new Error('you must be authorizationed!'));
     }
+
     try {
         verify(access.split(' ')[1], process.env.JWT_SECRET!);
     } catch {
@@ -135,13 +135,11 @@ export async function updatePost(req: Request, res: Response, next: NextFunction
     const validatePost = plainToInstance(UpdatePostDto, data);
 
     const error = await validate(validatePost);
-
     if (error.length > 0) {
         return next(new Error(error.join(' | ')));
     }
 
     const post = await PostModel.findById(postId);
-
     if (!post) {
         return next(new Error('Do not have posts with this ID'));
     }
