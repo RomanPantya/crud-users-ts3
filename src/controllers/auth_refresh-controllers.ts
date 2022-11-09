@@ -1,14 +1,16 @@
 import { NextFunction, Request, Response } from 'express';
 import { validate } from 'class-validator';
 import { plainToInstance } from 'class-transformer';
-import { sign } from 'jsonwebtoken';
+import { sign, verify } from 'jsonwebtoken';
 import { AuthDto } from '../dto/auth.dto';
 import { UserModel } from '../models/user-model';
 
-export async function login(req:Request, res: Response, next: NextFunction) {
-    const data = req.body;
+export async function loginOrRefresh(req:Request, res: Response, next: NextFunction) {
+    const userData = req.body;
 
-    const validateAuth = plainToInstance(AuthDto, data);
+    const access = req.headers.authorization;
+
+    const validateAuth = plainToInstance(AuthDto, userData);
 
     const error = await validate(validateAuth);
     if (error.length > 0) {
@@ -21,6 +23,14 @@ export async function login(req:Request, res: Response, next: NextFunction) {
     }
     if (user.password !== validateAuth.password) {
         return next(new Error('error 403: password is not valid!'));
+    }
+
+    if (access) {
+        try {
+            verify(access.split(' ')[1], process.env.JWT_SECRET_REF!);
+        } catch (err) {
+            return next(err);
+        }
     }
 
     const twoTokens = {

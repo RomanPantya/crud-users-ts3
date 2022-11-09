@@ -6,6 +6,7 @@ import { config } from 'dotenv';
 import { authRouter } from './routes/auth-router';
 import { postsRouter } from './routes/posts-router';
 import { usersRouter } from './routes/users-router';
+import { refreshRouter } from './routes/refresh-router';
 
 config();
 
@@ -23,6 +24,7 @@ async function main() {
     app.use('/users', usersRouter);
     app.use('/posts', postsRouter);
     app.use('/auth', authRouter);
+    app.use('/refresh', refreshRouter);
 
     // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
     app.use((err: ErrorRequestHandler, req: Request, res: Response, next: NextFunction) => {
