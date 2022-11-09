@@ -22,9 +22,9 @@ export async function createPost(req: Request, res: Response, next: NextFunction
         return next(error);
     }
 
-    const data = { ...req.body, userId: postUserId };
+    const postData = { ...req.body, userId: postUserId };
 
-    const validatePost = plainToInstance(CreatePostDto, data);
+    const validatePost = plainToInstance(CreatePostDto, postData);
 
     const error = await validate(validatePost);
     if (error.length > 0) {
@@ -147,12 +147,12 @@ export async function updatePost(req: Request, res: Response, next: NextFunction
         return next(new Error('Invalid Id'));
     }
 
-    const data = req.body;
-    if (isNotEmptyObject(data) === false) {
+    const postData = req.body;
+    if (isNotEmptyObject(postData) === false) {
         return next(new Error('Do not have data to update!'));
     }
 
-    const validatePost = plainToInstance(UpdatePostDto, data);
+    const validatePost = plainToInstance(UpdatePostDto, postData);
 
     const error = await validate(validatePost);
     if (error.length > 0) {
