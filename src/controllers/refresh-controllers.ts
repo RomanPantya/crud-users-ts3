@@ -1,36 +1,37 @@
 import { NextFunction, Request, Response } from 'express';
 import { validate } from 'class-validator';
 import { plainToInstance } from 'class-transformer';
-import { sign, verify } from 'jsonwebtoken';
-import { AuthDto } from '../dto/auth.dto';
+import { verify, sign } from 'jsonwebtoken';
+import { RefreshDto } from '../dto/refresh.dto';
 import { UserModel } from '../models/user-model';
 
-export async function loginOrRefresh(req:Request, res: Response, next: NextFunction) {
+export async function refresh(req: Request, res: Response, next: NextFunction) {
     const userData = req.body;
 
-    const access = req.headers.authorization;
+    const validateUserData = plainToInstance(RefreshDto, userData);
 
-    const validateAuth = plainToInstance(AuthDto, userData);
-
-    const error = await validate(validateAuth);
+    const error = await validate(validateUserData);
     if (error.length > 0) {
         return next(new Error(error.join(' | ')));
     }
 
-    const user = await UserModel.findOne({ email: validateAuth.email });
-    if (!user) {
-        return next(new Error('error 403: email is not valid!'));
-    }
-    if (user.password !== validateAuth.password) {
-        return next(new Error('error 403: password is not valid!'));
+    let userId;
+    try {
+        const { id } = verify(validateUserData.refresh, process.env.JWT_SECRET_REF!) as {id: string};
+        userId = id;
+    } catch (err) {
+        return next(err);
     }
 
-    if (access) {
-        try {
-            verify(access.split(' ')[1], process.env.JWT_SECRET_REF!);
-        } catch (err) {
-            return next(err);
-        }
+    const user = await UserModel.findById(userId);
+    if (!user) {
+        return next(new Error('you must be authorizationed!'));
+    }
+    if (user.email !== validateUserData.email) {
+        return next(new Error('error 403: email is not valid!'));
+    }
+    if (user.password !== validateUserData.password) {
+        return next(new Error('error 403: password is not valid!'));
     }
 
     const twoTokens = {

@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { loginOrRefresh } from '../controllers/auth_refresh-controllers';
+import { refresh } from '../controllers/refresh-controllers';
 
 export const refreshRouter = Router()
-    .get('/', loginOrRefresh);
+    .post('/', refresh);
