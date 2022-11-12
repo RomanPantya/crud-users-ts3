@@ -1,9 +1,10 @@
 import { NextFunction, Request, Response } from 'express';
 import { validate } from 'class-validator';
 import { plainToInstance } from 'class-transformer';
-import { verify, sign } from 'jsonwebtoken';
+import { verify } from 'jsonwebtoken';
 import { RefreshDto } from '../dto/refresh.dto';
 import { UserModel } from '../models/user-model';
+import { getTokens } from '../util';
 
 export async function refresh(req: Request, res: Response, next: NextFunction) {
     const userData = req.body;
@@ -34,10 +35,7 @@ export async function refresh(req: Request, res: Response, next: NextFunction) {
         return next(new Error('error 403: password is not valid!'));
     }
 
-    const twoTokens = {
-        access: sign({ id: user.id }, process.env.JWT_SECRET!, { expiresIn: '2h' }),
-        refresh: sign({ id: user.id }, process.env.JWT_SECRET_REF!, { expiresIn: '2d' }),
-    };
+    const twoTokens = getTokens({ id: user.id });
 
     return res.json({ twoTokens });
 }

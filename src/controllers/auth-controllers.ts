@@ -1,9 +1,9 @@
 import { NextFunction, Request, Response } from 'express';
 import { validate } from 'class-validator';
 import { plainToInstance } from 'class-transformer';
-import { sign } from 'jsonwebtoken';
 import { AuthDto } from '../dto/auth.dto';
 import { UserModel } from '../models/user-model';
+import { getTokens } from '../util';
 
 export async function login(req:Request, res: Response, next: NextFunction) {
     const userData = req.body;
@@ -28,10 +28,7 @@ export async function login(req:Request, res: Response, next: NextFunction) {
 
     await user.updateOne({ $set: { isLogin: true } });
 
-    const twoTokens = {
-        access: sign({ id: user.id }, process.env.JWT_SECRET!, { expiresIn: '2h' }),
-        refresh: sign({ id: user.id }, process.env.JWT_SECRET_REF!, { expiresIn: '2d' }),
-    };
+    const twoTokens = getTokens({ id: user.id });
 
     return res.json({ twoTokens });
 }
