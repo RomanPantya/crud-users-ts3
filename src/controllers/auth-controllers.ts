@@ -22,6 +22,11 @@ export async function login(req:Request, res: Response, next: NextFunction) {
     if (user.password !== validateAuth.password) {
         return next(new Error('error 403: password is not valid!'));
     }
+    if (user.isLogin === true) {
+        return next(new Error('You do not need autorizaited!'));
+    }
+
+    await user.updateOne({ $set: { isLogin: true } });
 
     const twoTokens = {
         access: sign({ id: user.id }, process.env.JWT_SECRET!, { expiresIn: '2h' }),
