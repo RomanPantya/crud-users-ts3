@@ -4,7 +4,7 @@ import { plainToInstance } from 'class-transformer';
 import { verify } from 'jsonwebtoken';
 import { RefreshDto } from '../dto/refresh.dto';
 import { UserModel } from '../models/user-model';
-import { getTokens } from '../util';
+import { getTokens } from '../utills/getTokens';
 
 export async function refresh(req: Request, res: Response, next: NextFunction) {
     const userData = req.body;

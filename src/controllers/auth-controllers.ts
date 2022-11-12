@@ -3,7 +3,7 @@ import { validate } from 'class-validator';
 import { plainToInstance } from 'class-transformer';
 import { AuthDto } from '../dto/auth.dto';
 import { UserModel } from '../models/user-model';
-import { getTokens } from '../util';
+import { getTokens } from '../utills/getTokens';
 
 export async function login(req:Request, res: Response, next: NextFunction) {
     const userData = req.body;
