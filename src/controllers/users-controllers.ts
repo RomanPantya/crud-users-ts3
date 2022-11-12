@@ -16,6 +16,13 @@ export async function createUser(req: Request, res: Response, next: NextFunction
 
     const user = new UserModel(validateUser);
 
-    const created = await user.save();
+    let created;
+    try {
+        const userSave = await user.save();
+        created = userSave;
+    } catch (err) {
+        return next(err);
+    }
+
     return res.json(created);
 }
